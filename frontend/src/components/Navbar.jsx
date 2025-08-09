@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import logo from '../assets/assets_frontend/logo.svg';
 import profile_pic from '../assets/assets_frontend/profile_pic.png';
 import dropDownIcon from '../assets/assets_frontend/dropdown_icon.svg';
 import menu_icon from '../assets/assets_frontend/menu_icon.svg';
 import cross_icon from '../assets/assets_frontend/cross_icon.png';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
 
 const Navbar = () => {
+
   const navigate = useNavigate();
+
+  const {token, setToken,userData} = useContext(AppContext)
+  
+
   const [showMenu, setShowMenu] = useState(false);
-  const [token, setToken] = useState(true);
+
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+ 
+  const logout = ()=>{
+    setToken(false);
+    setShowMenu(false);
+    setShowProfileMenu(false);
+    localStorage.removeItem('token')
+  }
 
   return (
     <div className='flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400'>
@@ -44,12 +58,12 @@ const Navbar = () => {
       </ul>
 
       <div className='flex items-center gap-4 relative'>
-        {token ? (
+        {token && userData ? (
           <div
             className='flex items-center gap-2 cursor-pointer'
             onClick={() => setShowProfileMenu((prev) => !prev)}
           >
-            <img className='w-8 rounded-full' src={profile_pic} alt='profile' />
+            <img className='w-8 h-8 rounded-full object-cover' src={userData.image} alt='profile' />
             <img className='w-2.5' src={dropDownIcon} alt='dropdown' />
           </div>
         ) : (
@@ -60,52 +74,54 @@ const Navbar = () => {
             Create Account
           </button>
         )}
+        
 
-        {/* Profile Dropdown */}
-        {showProfileMenu && (
-          <div className='absolute top-14 right-0 text-base font-medium text-gray-600 z-20 bg-stone-100 rounded flex flex-col gap-4 p-4'>
-            <p
-              onClick={() => {
-                navigate('my-profile');
-                setShowProfileMenu(false);
-              }}
-              className='hover:text-black cursor-pointer'
-            >
-              My Profile
-            </p>
-            <p
-              onClick={() => {
-                navigate('my-appointment');
-                setShowProfileMenu(false);
-              }}
-              className='hover:text-black cursor-pointer'
-            >
-              My Appointment
-            </p>
-            <p
-              onClick={() => {
-                setToken(false);
-                setShowProfileMenu(false);
-              }}
-              className='hover:text-black cursor-pointer'
-            >
-              Logout
-            </p>
-          </div>
-        )}
+       {/* Profile Dropdown */}
+{showProfileMenu && (
+<div className='absolute top-14 right-0 text-base font-medium text-gray-600 z-20 bg-stone-100 rounded flex flex-col gap-4 p-4 min-w-[180px] whitespace-nowrap'>
+    <button
+      onClick={() => {
+        navigate('my-profile');
+        setShowProfileMenu(false);
+      }}
+      className='hover:text-black cursor-pointer text-left w-full'
+      type="button"
+    >
+      My Profile
+    </button>
+    <button
+      onClick={() => {
+        navigate('my-appointment');
+        setShowProfileMenu(false);
+      }}
+      className='hover:text-black cursor-pointer text-left w-full'
+      type="button"
+    >
+      My Appointment
+    </button>
+    <button
+      onClick={logout}
+      className='hover:text-black cursor-pointer text-left w-full'
+      type="button"
+    >
+      Logout
+    </button>
+  </div>
+)}
 
-        <img
-          onClick={() => setShowMenu(true)}
-          className='w-6 md:hidden'
-          src={menu_icon}
-          alt=''
-        />
 
         {/* ----Mobile Menu---- */}
+
+      <img
+      src={menu_icon}
+      alt="menu"
+      className="w-6 h-6 cursor-pointer block md:hidden"
+      onClick={() => setShowMenu(true)}
+      />
+
         <div
-          className={`${
-            showMenu ? 'fixed w-full' : 'h-0 w-0'
-          } md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all`}
+          className={`fixed top-0 right-0 bottom-0 z-20 bg-white transition-all duration-300 md:hidden ${showMenu ? 'w-3/4 max-w-xs shadow-lg' : 'w-0 overflow-hidden'}`}
+          style={{ height: '100vh' }}
         >
           <div className='flex items-center justify-between px-5 py-6'>
             <img className='w-36' src={logo} alt='' />

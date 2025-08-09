@@ -1,32 +1,84 @@
 import React, { useState } from "react";
-import profile_pic from "../assets/assets_frontend/profile_pic.png";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
+import {assets} from '../assets/assets_frontend/assets'
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const MyProfile = () => {
-  const [userData, setUserData] = useState({
-    name: "Tania Ashraf",
-    image: profile_pic,
-    email: "rajpoottania299@gmail.com",
-    phone: "+1 123 456 7890",
-    address: {
-      line1: "57th Cross, Richmond",
-      line2: "Circle, Church Road, London",
-    },
-    gender: "Male",
-    dob: "2001-01-20",
-  });
+
+  const {userData,setUserData,token ,backendUrl,loadUserProfileData} = useContext(AppContext)
 
   const [isEdit, setIsEdit] = useState(false);
+  const [image,setImage] = useState(false);
 
-  return (
+
+  const updateUserProfileData = async ()=>{
+
+    try {
+      
+     const formData = new FormData()
+
+    formData.append('name', userData.name)
+    formData.append('phone', userData.phone)
+    formData.append('gender', userData.gender)
+    formData.append('dob', userData.dob)
+    formData.append('address', JSON.stringify(userData.address))
+
+    image && formData.append('image', image)
+
+    const {data} = await axios.post(backendUrl + '/api/user/update-profile',formData,{headers:{token}})
+   
+    if(data.success){
+      toast.success(data.message)
+      await loadUserProfileData()
+      setIsEdit(false)
+      setImage(false)
+    }else{
+      toast.error(data.message)
+    }
+  } catch (error) {
+      console.log(error)
+      toast.error(error.message)
+    }
+
+  }
+
+  return userData &&  (
     <div className="max-w-4xl mx-auto mt-10 bg-white rounded-2xl shadow-md px-10 py-8 space-y-8 text-sm text-gray-700">
-      {/* Top Section: Profile Picture and Name (Name under Image) */}
+      
+
+      {/* Profile Image and Name Section */}
       <div className="flex gap-6">
         <div className="flex flex-col items-start">
-          <img
-            className="w-32 h-32 rounded-full object-cover"
-            src={userData.image}
-            alt="Profile"
-          />
+          {isEdit ? (
+            <label htmlFor="image" style={{ cursor: "pointer" }}>
+              <div className="inline-block relative cursor-pointer " style={{ position: "relative" }}>
+                <img
+                  className="w-36 h-32 rounded opacity-75"
+                  src={image ? URL.createObjectURL(image) : userData.image}
+                  alt="Profile"
+                />
+                <img
+                  src={assets.upload_icon}
+                  alt="Upload"
+                  className="absolute bottom-12 right-12 w-10 "
+                />
+              </div>
+              <input
+                onChange={(e) => setImage(e.target.files[0])}
+                type="file"
+                id="image"
+                hidden
+              />
+            </label>
+          ) : (
+            <img
+              className="w-32 h-32 object-cover"
+              src={userData.image}
+              alt="Profile"
+            />
+          )}
           {isEdit ? (
             <input
               className="bg-gray-100 text-lg font-semibold px-3 py-2 rounded mt-2"
@@ -38,10 +90,8 @@ const MyProfile = () => {
             />
           ) : (
             <p className="text-3xl font-semibold text-neutral-800 mt-2 border-b-2 border-primary inline-block pb-0 leading-none">
-  {userData.name}
-</p>
-
-
+              {userData.name}
+            </p>
           )}
         </div>
       </div>
@@ -150,7 +200,7 @@ const MyProfile = () => {
         {isEdit ? (
           <button
             className="bg-primary text-white font-medium px-6 py-2 rounded-full hover:bg-primary/90 transition"
-            onClick={() => setIsEdit(false)}
+            onClick={updateUserProfileData}
           >
             Save Information
           </button>
